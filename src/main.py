@@ -1,13 +1,14 @@
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
-from typing import Optional
+from fastapi import FastAPI
 from dotenv import load_dotenv
 import os
+from pathlib import Path
 
-
-load_dotenv()
+BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(BASE_DIR / ".env")
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 from .routers.rag_urls import router as rag_routers
 from .routers.maintenance import router as maintenance_routers

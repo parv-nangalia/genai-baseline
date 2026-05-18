@@ -2,7 +2,7 @@ from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from typing import Optional
 
 from fastapi.responses import JSONResponse
-from ..views.rag import ingestionView
+from ..views.rag import ingestionView, ragQueryView
 
 router = APIRouter(
     tags=["RagUrls"],
@@ -47,8 +47,15 @@ async def upload(
             content = "successfully created embeddings, text using /query endpoint"
             )
 
-    
-
-    
-
-    
+   
+@router.post("/query")
+async def query_documents(
+        question: str,
+        model: str = "hugging-face",  # 'openai' or 'hf'
+        top_k: int = 5
+        ):
+    try:
+        response = ragQueryView(question, model, top_k)
+        return JSONResponse(status_code=200, content=response)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
