@@ -52,10 +52,11 @@ async def upload(
 async def query_documents(
         question: str,
         model: str = "hugging-face",  # 'openai' or 'hf'
-        top_k: int = 5
+        top_k: int = 5,
+        comprehensiveness: int = 3
         ):
     try:
-        response = ragQueryView(question, model, top_k)
+        response = ragQueryView(question, model, top_k, comprehensiveness)
         return JSONResponse(status_code=200, content=response)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
