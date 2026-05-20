@@ -7,4 +7,7 @@ router = APIRouter(
 
 @router.get("/health")
 async def root():
-    return JSONResponse({"status": "ok"})
+    return JSONResponse(
+        status_code=200,
+        content={"status": "ok"}
+    )
