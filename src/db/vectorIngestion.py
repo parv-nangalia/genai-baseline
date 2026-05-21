@@ -123,42 +123,6 @@ def prepare_embedding_rows(processed_chunks):
     return embedding_rows
 
 
-# =========================================================
-# INSERT CHUNKS
-# =========================================================
-
-# def insert_chunks(
-#     conn,
-#     chunk_rows
-# ):
-
-#     """
-#     Inserts canonical chunk text
-#     """
-
-#     if not chunk_rows:
-#         return
-
-#     with conn.cursor() as cur:
-
-#         execute_values(
-#             cur,
-#             """
-#             INSERT INTO chunks
-#             (
-#                 id,
-#                 doc_id,
-#                 content,
-#                 metadata
-#             )
-#             VALUES %s
-#             """,
-#             chunk_rows
-#         )
-
-#     conn.commit()
-
-
 def insert_chunks(session: Session, chunk_rows: List[tuple]):
 
     if not chunk_rows:
@@ -176,40 +140,6 @@ def insert_chunks(session: Session, chunk_rows: List[tuple]):
 
     session.commit()
 
-# =========================================================
-# INSERT EMBEDDINGS
-# =========================================================
-
-# def insert_embeddings(
-#     conn,
-#     embedding_rows
-# ):
-
-#     """
-#     Inserts vector embeddings
-#     """
-
-#     if not embedding_rows:
-#         return
-
-#     with conn.cursor() as cur:
-
-#         execute_values(
-#             cur,
-#             """
-#             INSERT INTO embeddings
-#             (
-#                 chunk_id,
-#                 model,
-#                 embedding,
-#                 metadata
-#             )
-#             VALUES %s
-#             """,
-#             embedding_rows
-#         )
-
-#     conn.commit()
 
 def insert_embeddings(session: Session, embedding_rows: List[tuple]):
 

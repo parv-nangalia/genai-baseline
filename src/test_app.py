@@ -9,9 +9,9 @@ def test_health():
 
 
 def test_rag_ingestions():
-    response = client.post("/ingest", data={"url": "https://en.wikipedia.org/wiki/Basketball_in_India"})
+    response = client.post("/ingest", data={"url": "https://en.wikipedia.org/wiki/Chope_(platform)"})
     assert response.status_code == 200
 
 def test_rag_query():
-    response = client.post("/query", json={"question": "What is the history of basketball in India?", "model": "hugging-face", "top_k": 5})
+    response = client.post("/query", data={"question": "what is Chope?", "model": "hugging-face", "top_k": 5, "comprehensiveness": 3})
     assert response.status_code == 200
