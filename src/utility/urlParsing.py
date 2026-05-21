@@ -11,7 +11,7 @@ FINAL OUTPUT FORMAT:
         "chunk_id": "...",
         "doc_id": "...",
         "text": "...",
-        "metadata": {...},
+        "meta_data": {...},
         "embeddings": {
             "openai": {
                 "model": "...",
@@ -227,7 +227,7 @@ def chunk_by_headings(
 
                         "text": combined_text,
 
-                        "metadata": {
+                        "meta_data": {
 
                             "url": page_url,
 
@@ -262,7 +262,7 @@ def chunk_by_headings(
 
                 "text": combined_text,
 
-                "metadata": {
+                "meta_data": {
 
                     "url": page_url,
 
@@ -270,7 +270,7 @@ def chunk_by_headings(
 
                     "section": current_heading,
 
-                    "content_type": "documentation"
+                            "content_type": "documentation"
                 }
             })
 
@@ -318,7 +318,7 @@ def parse_website(
             "chunk_id": "...",
             "doc_id": "...",
             "text": "...",
-            "metadata": {...},
+            "meta_data": {...},
             "embeddings": {
                 "openai": {...},
                 "hf": {...}
@@ -368,7 +368,7 @@ def parse_website(
 
         chunk_text = chunk["text"]
 
-        metadata = chunk["metadata"]
+        metadata = chunk["meta_data"]
 
         chunk_id = chunk["chunk_id"]
 
@@ -393,7 +393,7 @@ def parse_website(
             "chunk_id": chunk_id,
             "doc_id": doc_id,
             "text": chunk_text,
-            "metadata": metadata,
+            "meta_data": metadata,
             "embeddings": {
                 "openai": {
                     "model": OPENAI_MODEL,

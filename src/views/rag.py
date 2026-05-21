@@ -27,8 +27,8 @@ def _get_comprehensiveness_instruction(level: int) -> str:
     return _get_comprehensiveness_instructions()[level]
 
 
-def ingestionView(target, targetType):
-    db_connection = DBConfig.get_connection()
+async def ingestionView(target, targetType):
+    db_session = DBConfig.get_session()
     if targetType=="url":
         ## logic to scrap using beautifulsoup
         try:
@@ -44,19 +44,19 @@ def ingestionView(target, targetType):
             print("error while parsing the document")
             raise
     try:
-        ingest_processed_chunks(db_connection, response)
+        ingest_processed_chunks(db_session, response)
     except Exception as e:
         print("Error while inserting the document into the db")
         raise
     finally:
-        db_connection.close()
-
+        print("Ingestion Successful, closing the db session")
+        db_session.close()
         
 
 def ragQueryView(question, model, top_k, comprehensiveness: int = 3):
-    db_connection = DBConfig.get_connection()
+    db_session = DBConfig.get_session()
     try:
-        chunks = search_similar_chunks(db_connection, question, model, top_k)
+        chunks = search_similar_chunks(db_session, question, model, top_k)
     except Exception as e:
         print("Error while querying the db for similar chunks")
         raise

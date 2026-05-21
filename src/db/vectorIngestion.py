@@ -33,7 +33,9 @@ as long as they return:
 =========================================================
 """
 
-from psycopg2.extras import execute_values, Json
+from sqlalchemy.orm import Session
+from ..db.models import Chunk, Embedding
+from typing import List
 
 
 # =========================================================
@@ -55,7 +57,7 @@ def prepare_chunk_rows(processed_chunks):
                 chunk["chunk_id"],
                 chunk["doc_id"],
                 chunk["text"],
-                chunk["metadata"]
+                chunk["meta_data"]
             )
         )
 
@@ -157,40 +159,22 @@ def prepare_embedding_rows(processed_chunks):
 #     conn.commit()
 
 
-def insert_chunks(conn, chunk_rows):
+def insert_chunks(session: Session, chunk_rows: List[tuple]):
 
     if not chunk_rows:
         return
 
-    rows = [
-        (
-            chunk_id,
-            doc_id,
-            content,
-            Json(metadata)
+    for chunk_id, doc_id, content, meta_data in chunk_rows:
+        # use merge to insert if not exist, otherwise ignore
+        obj = Chunk(
+            id=chunk_id,
+            doc_id=doc_id,
+            content=content,
+            meta_data=meta_data,
         )
-        for chunk_id, doc_id, content, metadata in chunk_rows
-    ]
+        session.merge(obj)
 
-    with conn.cursor() as cur:
-
-        execute_values(
-            cur,
-            """
-            INSERT INTO chunks
-            (
-                id,
-                doc_id,
-                content,
-                metadata
-            )
-            VALUES %s
-            ON CONFLICT (id) DO NOTHING
-            """,
-            rows
-        )
-
-    conn.commit()
+    session.commit()
 
 # =========================================================
 # INSERT EMBEDDINGS
@@ -227,46 +211,25 @@ def insert_chunks(conn, chunk_rows):
 
 #     conn.commit()
 
-def insert_embeddings(conn, embedding_rows):
+def insert_embeddings(session: Session, embedding_rows: List[tuple]):
 
     if not embedding_rows:
         return
 
-    rows = [
-        (
-            chunk_id,
-            model,
-            embedding,
-            Json(metadata),
-            dimension
+    for chunk_id, model, embedding, meta_data, dimension in embedding_rows:
+        obj = Embedding(
+            chunk_id=chunk_id,
+            model=model,
+            embedding=embedding,
+            meta_data=meta_data,
+            dimension=dimension,
         )
-        for chunk_id, model, embedding, metadata, dimension in embedding_rows
-    ]
+        session.add(obj)
 
     try:
-        with conn.cursor() as cur:
-
-            execute_values(
-                cur,
-                """
-                INSERT INTO embeddings
-                (
-                    chunk_id,
-                    model,
-                    embedding,
-                    metadata,
-                    dimension
-                )
-                VALUES %s
-                ON CONFLICT DO NOTHING
-                """,
-                rows
-            )
-
-        conn.commit()
-    except Exception as e:
-        print("ERROR TYPE:", type(e))
-        print("ERROR MESSAGE:", e)
+        session.commit()
+    except Exception:
+        session.rollback()
         raise
 
 
@@ -275,7 +238,7 @@ def insert_embeddings(conn, embedding_rows):
 # =========================================================
 
 def ingest_processed_chunks(
-    conn,
+    session: Session,
     processed_chunks
 ):
 
@@ -306,7 +269,7 @@ def ingest_processed_chunks(
     # -----------------------------------------------------
 
     insert_chunks(
-        conn,
+        session,
         chunk_rows
     )
 
@@ -315,7 +278,7 @@ def ingest_processed_chunks(
     # -----------------------------------------------------
 
     insert_embeddings(
-        conn,
+        session,
         embedding_rows
     )
     

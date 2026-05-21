@@ -1,67 +1,77 @@
 
-from psycopg2.extras import RealDictCursor
+from typing import List
 from ..utility.helper import get_hf_embedding_textual, get_openai_embedding
+from sqlalchemy.orm import Session
+from ..db.models import Chunk, Embedding
+import math
 
-from psycopg2.extras import RealDictCursor
+
+def _cosine_similarity(a: List[float], b: List[float]) -> float:
+    if not a or not b:
+        return -1.0
+    dot = sum(x * y for x, y in zip(a, b))
+    mag_a = math.sqrt(sum(x * x for x in a))
+    mag_b = math.sqrt(sum(y * y for y in b))
+    if mag_a == 0 or mag_b == 0:
+        return -1.0
+    return dot / (mag_a * mag_b)
+
 
 def search_similar_chunks(
-    conn,
-    question,
-    model_name,
-    top_k=5
+    session: Session,
+    question: str,
+    model_name: str,
+    top_k: int = 5,
 ):
+    """Search similar chunks using ORM session and Python-side similarity.
 
+    This fetches candidate embeddings for the requested model and dimension,
+    computes cosine similarity in Python, and returns the top_k matches.
+    """
     if model_name == "openai":
         embedding_vector = get_openai_embedding(question)
     elif model_name == "hugging-face":
         embedding_vector = get_hf_embedding_textual(question)
-    model_name = "hf"
+    else:
+        embedding_vector = get_hf_embedding_textual(question)
+
     dimension = len(embedding_vector)
 
-    vector_str = "[" + ",".join(
-        map(str, embedding_vector)
-    ) + "]"
+    # fetch embeddings for model and dimension
+    results = (
+        session.query(Embedding, Chunk)
+        .join(Chunk, Embedding.chunk_id == Chunk.id)
+        .filter(Embedding.model == ("hf" if model_name.startswith("hugging") else model_name))
+        .filter(Embedding.dimension == dimension)
+        .all()
+    )
 
-    query = """
-    SELECT
-        c.id,
-        c.doc_id,
-        c.content,
-        c.metadata AS chunk_metadata,
+    scored = []
+    for emb, chunk in results:
+        try:
+            vec = emb.embedding or []
+            score = _cosine_similarity(embedding_vector, vec)
+        except Exception:
+            score = -1.0
+        scored.append((score, chunk, emb))
 
-        e.id AS embedding_id,
-        e.model,
-        e.dimension,
-        e.embedding,
-        e.metadata AS embedding_metadata
+    scored.sort(key=lambda x: x[0], reverse=True)
 
-    FROM chunks c
-
-    JOIN embeddings e
-    ON c.id = e.chunk_id
-
-    WHERE
-        e.model = %s
-        AND e.dimension = %s
-
-    ORDER BY e.embedding <#> %s::vector
-
-    LIMIT %s
-    """
-
-    with conn.cursor(
-        cursor_factory=RealDictCursor
-    ) as cur:
-
-        cur.execute(
-            query,
-            (
-                model_name,
-                dimension,
-                vector_str,
-                top_k
-            )
+    top = []
+    for score, chunk, emb in scored[:top_k]:
+        top.append(
+            {
+                "id": chunk.id,
+                "doc_id": chunk.doc_id,
+                "content": chunk.content,
+                "chunk_metadata": chunk.meta_data,
+                "embedding_id": emb.id,
+                "model": emb.model,
+                "dimension": emb.dimension,
+                "embedding": emb.embedding,
+                "embedding_metadata": emb.meta_data,
+                "score": score,
+            }
         )
 
-        chunks = cur.fetchall()
-    return chunks
+    return top
