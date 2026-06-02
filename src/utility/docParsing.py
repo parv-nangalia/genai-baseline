@@ -130,7 +130,7 @@ def process_document(file: UploadFile, doc_id: str):
 
     for idx, chunk_text in enumerate(chunks):
         chunk_id = str(uuid.uuid4())
-        metadata = {
+        meta_data = {
             "source": file.filename,
             "chunk_index": idx
         }
@@ -149,7 +149,7 @@ def process_document(file: UploadFile, doc_id: str):
             "chunk_id": chunk_id,
             "doc_id": doc_id,
             "text": chunk_text,
-            "metadata": metadata,
+            "meta_data": meta_data,
             "embeddings": {
                 "openai": {
                     "model": OPENAI_MODEL,

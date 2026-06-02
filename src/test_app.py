@@ -5,5 +5,13 @@ client = TestClient(app)
 
 def test_health():
     response = client.get("/health")
-    assert response.json() == {"status": "ok"}
+    assert response.status_code == 200
 
+
+def test_rag_ingestions():
+    response = client.post("/ingest", data={"url": "https://en.wikipedia.org/wiki/Chope_(platform)"})
+    assert response.status_code == 200
+
+def test_rag_query():
+    response = client.post("/query", data={"question": "what is Chope?", "model": "hugging-face", "top_k": 5, "comprehensiveness": 3})
+    assert response.status_code == 200

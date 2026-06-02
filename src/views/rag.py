@@ -6,9 +6,29 @@ from ..utility.helper import get_doc_uuid
 from ..db.query import search_similar_chunks
 from ..services.LLMServiceFactory import LLMServiceFactory
 
+_comprehensiveness_instruction_map = None
 
-def ingestionView(target, targetType):
-    db_connection = DBConfig.get_connection()
+
+def _get_comprehensiveness_instructions():
+    global _comprehensiveness_instruction_map
+    if _comprehensiveness_instruction_map is None:
+        _comprehensiveness_instruction_map = {
+            1: "Use the fewest words possible and keep the answer direct and to the point.",
+            2: "Provide a brief answer with only the most important details.",
+            3: "Provide a balanced answer with enough detail to fully address the question.",
+            4: "Provide a detailed answer with extra reasoning and useful context.",
+            5: "Provide an in-depth, comprehensive answer with full explanation and supporting details."
+        }
+    return _comprehensiveness_instruction_map
+
+
+def _get_comprehensiveness_instruction(level: int) -> str:
+    level = max(1, min(5, level))
+    return _get_comprehensiveness_instructions()[level]
+
+
+async def ingestionView(target, targetType):
+    db_session = DBConfig.get_session()
     if targetType=="url":
         ## logic to scrap using beautifulsoup
         try:
@@ -24,19 +44,19 @@ def ingestionView(target, targetType):
             print("error while parsing the document")
             raise
     try:
-        ingest_processed_chunks(db_connection, response)
+        ingest_processed_chunks(db_session, response)
     except Exception as e:
         print("Error while inserting the document into the db")
         raise
     finally:
-        db_connection.close()
-
+        print("Ingestion Successful, closing the db session")
+        db_session.close()
         
 
-def ragQueryView(question,model,top_k):
-    db_connection = DBConfig.get_connection()
+def ragQueryView(question, model, top_k, comprehensiveness: int = 3):
+    db_session = DBConfig.get_session()
     try:
-        chunks = search_similar_chunks(db_connection,question, model, top_k)
+        chunks = search_similar_chunks(db_session, question, model, top_k)
     except Exception as e:
         print("Error while querying the db for similar chunks")
         raise
@@ -46,6 +66,7 @@ def ragQueryView(question,model,top_k):
 
 
     context_text = "\n\n".join([f"Chunk {i+1}: {c['content']}" for i, c in enumerate(chunks)])
+    instruction = _get_comprehensiveness_instruction(comprehensiveness)
 
     prompt = f"""
     Use the following document chunks to answer the question.
@@ -56,12 +77,9 @@ def ragQueryView(question,model,top_k):
     Question:
     {question}
 
-    Answer concisely based on the context.
+    {instruction}
     """
 
-    # -----------------
-    # 5. Ask GPT
-    # -----------------
     llm_client = LLMServiceFactory.get_llm_client("gemini")
     answer = llm_client.ask_gpt(prompt)
 
