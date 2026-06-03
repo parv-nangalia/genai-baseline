@@ -15,6 +15,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from src.utility.urlParsing import fake_openai_vector
 
 from .helper import get_openai_embedding, get_hf_embedding_textual
+from .logging_config import log_function_call
 
 
 # =========================================================
@@ -55,6 +56,7 @@ def extract_text_from_txt_bytes(file_bytes: bytes) -> str:
     return file_bytes.decode("utf-8")
 
 
+@log_function_call
 def load_document(file: UploadFile) -> str:
     """
     Reads file content from UploadFile and returns raw text.
@@ -95,6 +97,7 @@ def chunk_document(text: str):
 # MAIN PIPELINE
 # =========================================================
 
+@log_function_call
 def process_document(file: UploadFile, doc_id: str):
     """
     Returns a list of chunk dictionaries:

@@ -1,9 +1,11 @@
 from sentence_transformers import CrossEncoder
+from ..utility.logging_config import log_function_call
 
 class Reranker:
     def __init__(self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"):
         self.model = CrossEncoder(model_name)
 
+    @log_function_call
     def rerank(self, query: str, chunks: list, top_k: int = 5):
         if not chunks:
             return []

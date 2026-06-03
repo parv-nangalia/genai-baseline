@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from ..db.models import Chunk, Embedding
 import math
 import re
+from ..utility.logging_config import log_function_call
 
 
 def _cosine_similarity(a: List[float], b: List[float]) -> float:
@@ -67,6 +68,7 @@ def score_bm25(query: str, chunks: List[Dict[str, Any]], k1: float = 1.5, b: flo
     return scored_chunks
 
 
+@log_function_call
 def reciprocal_rank_fusion(
     vector_results: List[Dict[str, Any]],
     keyword_results: List[Dict[str, Any]],
@@ -99,6 +101,7 @@ def reciprocal_rank_fusion(
     return fused_results
 
 
+@log_function_call
 def search_chunks(
     session: Session,
     question: str,

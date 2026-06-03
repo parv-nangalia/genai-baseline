@@ -3,6 +3,7 @@ from openai import OpenAI
 from src.main import OPENAI_API_KEY
 from .llmClientInterface import LLMClientInterface
 import os
+from ..utility.logging_config import log_function_call
 
 
 class OpenAIllmImpl(LLMClientInterface):
@@ -17,6 +18,7 @@ class OpenAIllmImpl(LLMClientInterface):
         client = OpenAI(api_key=api_key)
         return client
         
+    @log_function_call
     def ask_gpt(self, prompt: str, model: str = "gpt-3.5-turbo") -> str:
         """
         Sends a prompt to GPT and returns the response text.

@@ -6,6 +6,7 @@ from ..utility.helper import get_doc_uuid
 from ..db.query import search_chunks
 from ..services.LLMServiceFactory import LLMServiceFactory
 from ..services.reranker import Reranker
+from ..utility.logging_config import log_function_call
 
 _comprehensiveness_instruction_map = None
 
@@ -28,6 +29,7 @@ def _get_comprehensiveness_instruction(level: int) -> str:
     return _get_comprehensiveness_instructions()[level]
 
 
+@log_function_call
 async def ingestionView(target, targetType):
     db_session = DBConfig.get_session()
     if targetType=="url":
@@ -55,6 +57,7 @@ async def ingestionView(target, targetType):
         db_session.close()
         
 
+@log_function_call
 def ragQueryView(question, model, top_k, comprehensiveness: int = 3, search_type: str = "vector", rerank: bool = False):
     db_session = DBConfig.get_session()
     try:

@@ -3,12 +3,14 @@ from typing import Optional
 
 from fastapi.responses import JSONResponse
 from ..views.rag import ingestionView, ragQueryView
+from ..utility.logging_config import log_function_call
 
 router = APIRouter(
     tags=["RagUrls"],
 )
 
 @router.post("/ingest")
+@log_function_call
 async def upload(
     url: Optional[str] = Form(None),
     file: Optional[UploadFile] = File(None)):
@@ -49,6 +51,7 @@ async def upload(
 
    
 @router.post("/query")
+@log_function_call
 async def query_documents(
         question: str = Form(...),
         model: str = Form("hugging-face"),
