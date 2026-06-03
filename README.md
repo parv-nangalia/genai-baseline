@@ -1,6 +1,6 @@
 # GenAI Baseline
 
-A FastAPI-based generative AI baseline project with support for OpenAI and Google Gemini integration.
+A FastAPI-based RAG pipeline application with support for OpenAI and Google Gemini integration.
 
 ## Docker
 
