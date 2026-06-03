@@ -197,20 +197,22 @@ def ingest_processed_chunks(
     # -----------------------------------------------------
     # INSERT CHUNKS
     # -----------------------------------------------------
+    try:
+        insert_chunks(
+            session,
+            chunk_rows
+        )
 
-    insert_chunks(
-        session,
-        chunk_rows
-    )
+        # -----------------------------------------------------
+        # INSERT EMBEDDINGS
+        # -----------------------------------------------------
 
-    # -----------------------------------------------------
-    # INSERT EMBEDDINGS
-    # -----------------------------------------------------
-
-    insert_embeddings(
-        session,
-        embedding_rows
-    )
+        insert_embeddings(
+            session,
+            embedding_rows
+        )
+    except Exception as e:
+        raise e
     
     return {
         "status": "success",

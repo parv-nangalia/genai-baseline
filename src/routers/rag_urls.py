@@ -30,7 +30,7 @@ async def upload(
             try:
                 await ingestionView(url, "url")
             except Exception as e:
-                return HTTPException(
+                raise HTTPException(
                     status_code = 400,
                     detail= "Some issue ingesting the url"
                 )
@@ -38,7 +38,7 @@ async def upload(
             try:
                 await ingestionView(file, "file")
             except Exception as e:
-                return HTTPException(
+                raise HTTPException(
                     status_code = 400,
                     detail= "Some issue ingesting the file"
                 )
@@ -53,10 +53,12 @@ async def query_documents(
         question: str = Form(...),
         model: str = Form("hugging-face"),
         top_k: int = Form(5),
-        comprehensiveness: int = Form(3)
+        comprehensiveness: int = Form(3),
+        search_type: str = Form("vector"),
+        rerank: bool = Form(False)
         ):
     try:
-        response = ragQueryView(question, model, top_k, comprehensiveness)
+        response = ragQueryView(question, model, top_k, comprehensiveness, search_type, rerank)
         return JSONResponse(status_code=200, content=response)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

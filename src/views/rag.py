@@ -3,8 +3,9 @@ from ..utility.docParsing import process_document
 from ..db.vectorIngestion import ingest_processed_chunks
 from ..db.dbConfig import DBConfig
 from ..utility.helper import get_doc_uuid
-from ..db.query import search_similar_chunks
+from ..db.query import search_chunks
 from ..services.LLMServiceFactory import LLMServiceFactory
+from ..services.reranker import Reranker
 
 _comprehensiveness_instruction_map = None
 
@@ -46,6 +47,7 @@ async def ingestionView(target, targetType):
     try:
         ingest_processed_chunks(db_session, response)
     except Exception as e:
+        print(str(e))
         print("Error while inserting the document into the db")
         raise
     finally:
@@ -53,12 +55,19 @@ async def ingestionView(target, targetType):
         db_session.close()
         
 
-def ragQueryView(question, model, top_k, comprehensiveness: int = 3):
+def ragQueryView(question, model, top_k, comprehensiveness: int = 3, search_type: str = "vector", rerank: bool = False):
     db_session = DBConfig.get_session()
     try:
-        chunks = search_similar_chunks(db_session, question, model, top_k)
+        # Fetch more candidates if we need to rerank
+        retrieve_k = top_k * 3 if rerank else top_k
+        chunks = search_chunks(db_session, question, model, search_type, retrieve_k)
+        
+        if rerank and chunks:
+            
+            reranker = Reranker()
+            chunks = reranker.rerank(question, chunks, top_k)
     except Exception as e:
-        print("Error while querying the db for similar chunks")
+        print("Error while querying the db for chunks")
         raise
 
     if not chunks:
