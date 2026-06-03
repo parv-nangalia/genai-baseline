@@ -48,6 +48,7 @@ from .helper import (
     get_openai_embedding,
     get_hf_embedding_textual
 )
+from .logging_config import log_function_call
 
 
 # =========================================================
@@ -69,6 +70,7 @@ HF_MODEL_NAME = "BAAI/bge-small-en-v1.5"
 # FETCH HTML
 # =========================================================
 
+@log_function_call
 def fetch_html(url: str) -> str:
 
     response = requests.get(
@@ -305,6 +307,7 @@ def extract_internal_links(
 # MAIN URL INGESTION PIPELINE
 # =========================================================
 
+@log_function_call
 def parse_website(
     url: str,
     doc_id: str

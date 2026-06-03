@@ -36,6 +36,7 @@ as long as they return:
 from sqlalchemy.orm import Session
 from ..db.models import Chunk, Embedding
 from typing import List
+from ..utility.logging_config import log_function_call
 
 
 # =========================================================
@@ -167,6 +168,7 @@ def insert_embeddings(session: Session, embedding_rows: List[tuple]):
 # MAIN INGESTION ORCHESTRATOR
 # =========================================================
 
+@log_function_call
 def ingest_processed_chunks(
     session: Session,
     processed_chunks
@@ -197,20 +199,22 @@ def ingest_processed_chunks(
     # -----------------------------------------------------
     # INSERT CHUNKS
     # -----------------------------------------------------
+    try:
+        insert_chunks(
+            session,
+            chunk_rows
+        )
 
-    insert_chunks(
-        session,
-        chunk_rows
-    )
+        # -----------------------------------------------------
+        # INSERT EMBEDDINGS
+        # -----------------------------------------------------
 
-    # -----------------------------------------------------
-    # INSERT EMBEDDINGS
-    # -----------------------------------------------------
-
-    insert_embeddings(
-        session,
-        embedding_rows
-    )
+        insert_embeddings(
+            session,
+            embedding_rows
+        )
+    except Exception as e:
+        raise e
     
     return {
         "status": "success",

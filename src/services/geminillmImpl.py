@@ -4,6 +4,7 @@ from google import genai
 from .llmClientInterface import LLMClientInterface
 import os
 from src.main import GOOGLE_API_KEY
+from ..utility.logging_config import log_function_call
 
 class geminiLLMClient(LLMClientInterface):
 
@@ -16,7 +17,7 @@ class geminiLLMClient(LLMClientInterface):
         client = genai.Client(api_key=api_key)
         return client
     
-
+    @log_function_call
     def ask_gpt(self, prompt: str):
         client = self.get_client()
 
