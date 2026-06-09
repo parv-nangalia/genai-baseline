@@ -58,10 +58,21 @@ async def query_documents(
         top_k: int = Form(5),
         comprehensiveness: int = Form(3),
         search_type: str = Form("vector"),
-        rerank: bool = Form(False)
+        rerank: bool = Form(False),
+        llm_type: str = Form("local"),
+        llm_model: str = Form("gemini")
         ):
     try:
-        response = ragQueryView(question, model, top_k, comprehensiveness, search_type, rerank)
+        response = ragQueryView(
+            question=question,
+            model=model,
+            top_k=top_k,
+            comprehensiveness=comprehensiveness,
+            search_type=search_type,
+            rerank=rerank,
+            llm_type=llm_type,
+            llm_model=llm_model
+        )
         return JSONResponse(status_code=200, content=response)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

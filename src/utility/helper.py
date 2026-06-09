@@ -1,4 +1,4 @@
-from ..services.IngestionServiceFactory import IngestionServiceFactory
+from ..services import IngestionServiceFactory
 import random, string
 from .logging_config import log_function_call
 

@@ -4,8 +4,7 @@ from ..db.vectorIngestion import ingest_processed_chunks
 from ..db.dbConfig import DBConfig
 from ..utility.helper import get_doc_uuid
 from ..db.query import search_chunks
-from ..services.LLMServiceFactory import LLMServiceFactory
-from ..services.reranker import Reranker
+from ..services import LLMServiceFactory, Reranker
 from ..utility.logging_config import log_function_call
 
 _comprehensiveness_instruction_map = None
@@ -58,7 +57,17 @@ async def ingestionView(target, targetType):
         
 
 @log_function_call
-def ragQueryView(question, model, top_k, comprehensiveness: int = 3, search_type: str = "vector", rerank: bool = False):
+def ragQueryView(question, model, top_k, comprehensiveness: int = 3, search_type: str = "vector", rerank: bool = False, llm_type: str = "local", llm_model: str = "gemini"):
+    # Validate llm_type and llm_model
+    if llm_type == "local":
+        factory_model = "gateway"
+    elif llm_type == "external":
+        if llm_model not in ["gemini", "open-ai"]:
+            raise ValueError(f"Invalid model '{llm_model}' for external LLM type. Supported: 'gemini', 'open-ai'")
+        factory_model = llm_model
+    else:
+        raise ValueError(f"Invalid llm_type '{llm_type}'. Supported: 'local', 'external'")
+
     db_session = DBConfig.get_session()
     try:
         # Fetch more candidates if we need to rerank
@@ -92,7 +101,7 @@ def ragQueryView(question, model, top_k, comprehensiveness: int = 3, search_type
     {instruction}
     """
 
-    llm_client = LLMServiceFactory.get_llm_client("gemini")
+    llm_client = LLMServiceFactory.get_llm_client(factory_model)
     answer = llm_client.ask_gpt(prompt)
 
     return {"answer": answer}
