@@ -11,9 +11,9 @@ class geminiLLMClient(LLMClientInterface):
     _GOOGLE_API_KEY = GOOGLE_API_KEY
 
     def get_client(self):
-        api_key = self._GOOGLE_API_KEY
-        if not api_key:
-            raise ValueError("GOOGLE_API_KEY not found in environment")
+        api_key = self._GOOGLE_API_KEY or os.getenv("GOOGLE_API_KEY")
+        if not api_key or api_key.strip() == "":
+            raise ValueError("no token set")
         client = genai.Client(api_key=api_key)
         return client
     

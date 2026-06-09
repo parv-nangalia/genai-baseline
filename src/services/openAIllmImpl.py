@@ -14,7 +14,9 @@ class OpenAIllmImpl(LLMClientInterface):
         self._OPEN_API_KEY = os.getenv('OPENAI_API_KEY')
 
     def get_client(self):
-        api_key = self._OPEN_API_KEY
+        api_key = self._OPEN_API_KEY or os.getenv('OPENAI_API_KEY')
+        if not api_key or api_key.strip() == "":
+            raise ValueError("no token set")
         client = OpenAI(api_key=api_key)
         return client
         
